@@ -65,14 +65,22 @@ const App = () => {
     socket.on('execute_ir', (commandData) => {
       console.log('Received command from PC:', commandData);
       const action = commandData.action;
-      setLastCommand(action);
 
-      const hexCode = IR_CODES[action];
+      let hexCode = null;
+      // If action is a valid 8-character hex code, use it directly!
+      if (action && action.length === 8 && /^[0-9A-Fa-f]{8}$/.test(action)) {
+        hexCode = action.toUpperCase();
+        setLastCommand(`Custom Hex: ${hexCode}`);
+      } else {
+        hexCode = IR_CODES[action];
+        setLastCommand(action);
+      }
+
       if (hexCode) {
         const pattern = generateNECTiming(hexCode);
         // Transmit at 38kHz
         IrManager.transmit(38000, pattern)
-          .then(() => console.log(`Transmitted ${action}`))
+          .then(() => console.log(`Transmitted hex ${hexCode}`))
           .catch((err) => console.log(`Failed to transmit:`, err));
       }
     });
